@@ -63,7 +63,9 @@
         padding:12px 0 max(14px, env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:6px;text-align:center}
   .foot, .foot .warn, .foot footer{color:#b9b9c6}
   .foot .warn{font-size:12px}
-  body.s2 .foot{display:none}
+  body.s2 .foot, body.sd .foot{display:none}
+  /* pot de miel : case invisible pour les humains, les robots la cochent */
+  .hp{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
   /* étape 2 : ENVOYER collé au bas de l'écran, bord à bord */
   #step2{flex:1}
 
@@ -124,6 +126,7 @@
     <label class="check rise" style="--i:3"><input type="checkbox" id="age">
       <span>J'ai 15 ans ou plus.</span></label>
     </div>
+    <div class="hp" aria-hidden="true"><label><input type="checkbox" id="hpCheck" name="newsletter" tabindex="-1" autocomplete="off"> Recevoir la newsletter</label></div>
     <p id="msg" role="status"></p>
     <button id="send" class="rise" style="--i:4" type="button" disabled>Envoyer</button>
   </section>
@@ -225,8 +228,11 @@ $('bar').onkeydown = e => { const k = { ArrowRight: 2, ArrowLeft: -2 }[e.key]; i
 $('redo').onclick = () => { blob = null; clearWave(); $('player').pause(); $('step2').hidden = true; $('step1').hidden = false; document.body.className = ''; $('time').textContent = '0:00 / 1:00'; $('recHint').textContent = 'Appuie pour parler. 1 minute max.'; ready(); };
 
 const slug = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30);
+function showDone() { $('step2').hidden = true; $('done').hidden = false; document.body.className = 'sd'; say(''); }
 $('send').onclick = async () => {
   if (SUPABASE_URL.includes('XXXX')) return say("La page n'est pas encore branchée (voir le guide).", true);
+  // robot détecté (case piège cochée) : on fait semblant que c'est envoyé, rien ne part
+  if ($('hpCheck').checked) return showDone();
   $('send').disabled = true; say('Envoi…');
   const ext = blob.type.includes('mp4') ? 'm4a' : blob.type.includes('ogg') ? 'ogg' : 'webm';
   const name = `${new Date().toISOString().replace(/[:.]/g, '-')}_${slug($('pseudo').value) || 'anonyme'}_${Math.random().toString(36).slice(2, 7)}.${ext}`;
@@ -235,7 +241,7 @@ $('send').onclick = async () => {
   try {
     const r = await fetch(`${SUPABASE_URL.replace(/\/$/, '')}/storage/v1/object/${BUCKET}/${name}`, { method: 'POST', headers, body: blob });
     if (!r.ok) throw new Error(r.status + ' ' + (await r.text()).slice(0, 120));
-    $('step2').hidden = true; $('done').hidden = false; document.body.className = ''; say('');
+    showDone();
   } catch (e) {
     console.error(e); say("L'envoi a raté. Vérifie ta connexion et réessaie.", true); ready();
   }
