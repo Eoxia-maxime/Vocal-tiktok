@@ -6,12 +6,12 @@
 <title>Lâche ton vocal</title>
 <meta name="description" content="Enregistre un vocal, il passera peut-être dans le prochain épisode.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@125,900&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
   /* Style Vice : fond bleu #3200ff, Impact blanc, un seul rouge pour le bouton d'enregistrement */
   :root{
     --paper:#3200ff; --ink:#ffffff; --mut:rgba(255,255,255,.78); --line:rgba(255,255,255,.3); --rec:#ff2d20; --ok:#0f9d58;
-    --display: Archivo, "Arial Black", sans-serif;
+    --display: "Dela Gothic One", "Arial Black", sans-serif;
     --body: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
   }
   *{box-sizing:border-box}
@@ -34,13 +34,13 @@
   @keyframes rise{from{opacity:0;transform:translateY(28px)}}
   @media (prefers-reduced-motion: reduce){.rise{animation:none}}
   #rec{width:132px;height:132px;border-radius:50%;border:0;background:var(--rec);color:#fff;cursor:pointer;
-       font:900 22px/1 var(--display);font-stretch:125%;letter-spacing:0;display:grid;place-items:center;
+       font:400 22px/1 var(--display);letter-spacing:0;display:grid;place-items:center;
        box-shadow:0 0 0 9px var(--paper), 0 0 0 18px var(--rec);margin:18px;transition:transform .12s}
   #rec:active{transform:scale(.96)}
   #rec.on{animation:pulse 1.2s ease-in-out infinite}
   @keyframes pulse{50%{box-shadow:0 0 0 14px var(--paper), 0 0 0 26px var(--rec)}}
   @media (prefers-reduced-motion: reduce){#rec.on{animation:none}}
-  #time{font:900 26px/1 var(--display);font-stretch:125%;font-variant-numeric:tabular-nums}
+  #time{font:400 26px/1 var(--display);font-variant-numeric:tabular-nums}
   #wave{width:100%;height:56px;display:block}
   .hint{font-size:13px;color:var(--mut);text-align:center;margin:0}
 
@@ -50,7 +50,7 @@
   #pp{width:44px;height:44px;border:0;background:var(--ink);color:var(--paper);cursor:pointer;flex:none;display:grid;place-items:center;padding:0}
   #bar{flex:1;height:10px;background:rgba(255,255,255,.28);cursor:pointer}
   #fill{height:100%;width:0;background:var(--ink);transition:width .25s linear}
-  #ptime{font:900 14px/1 var(--display);font-stretch:125%;font-variant-numeric:tabular-nums;white-space:nowrap}
+  #ptime{font:400 14px/1 var(--display);font-variant-numeric:tabular-nums;white-space:nowrap}
   .link{background:none;border:0;color:var(--ink);text-decoration:underline;font:600 15px var(--body);cursor:pointer;padding:6px}
 
   .field{display:flex;flex-direction:column;gap:6px}
@@ -70,9 +70,9 @@
   #recMsg{margin:0;background:var(--rec);color:#fff;font-weight:700;font-size:14px;text-align:center;padding:8px 14px}
   #recMsg:empty{display:none}
 
-  #send{font:900 24px/1 var(--display);font-stretch:125%;letter-spacing:0;border:0;background:var(--ink);color:var(--paper);cursor:pointer;text-transform:uppercase;
-        position:sticky;bottom:0;z-index:2;margin:0 calc(-1 * max(18px, env(safe-area-inset-left)));
-        padding:22px 18px max(22px, calc(10px + env(safe-area-inset-bottom)))}
+  #send{font:400 24px/1 var(--display);letter-spacing:0;border:0;background:var(--ink);color:var(--paper);cursor:pointer;text-transform:uppercase;
+        position:sticky;bottom:max(20px, env(safe-area-inset-bottom));z-index:2;margin:20px calc(20px - max(18px, env(safe-area-inset-left)));
+        padding:20px 18px}
   #send:disabled{background:#8a7dff;color:var(--paper);cursor:not-allowed}
   /* petits écrans : on resserre pour que tout tienne */
   @media (max-height: 760px){ main{gap:14px} .deck{gap:10px;padding-top:4px} #rec{width:112px;height:112px} #wave{height:40px} .sub{font-size:15px} }
@@ -81,8 +81,9 @@
   #msg{min-height:22px;font-weight:600;margin:0}
   #msg.err{color:#fff;border-left:3px solid var(--rec);padding-left:10px}
   #msg:empty{display:none}
-  #done{text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center}
-  #done h2{font:900 52px/.95 var(--display);font-stretch:125%;margin:0;text-transform:uppercase}
+  #done{text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;flex:1}
+  #done[hidden]{display:none}
+  #done h2{font:400 52px/.95 var(--display);margin:0;text-transform:uppercase}
   footer{font-size:12px;color:var(--mut)}
   .deck .hint{text-align:center}
 </style>
