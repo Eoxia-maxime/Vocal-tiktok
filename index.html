@@ -63,7 +63,9 @@
         padding:12px 0 max(14px, env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:6px;text-align:center}
   .foot, .foot .warn, .foot footer{color:#b9b9c6}
   .foot .warn{font-size:12px}
-  body.s2 .foot, body.sd .foot{display:none}
+  /* étape 1 : "Ne dis pas…" ; écran Reçu : "Ton vocal est stocké…" ; étape 2 : rien */
+  body.s2 .foot{display:none}
+  body:not(.sd) .foot footer, body.sd .foot .warn{display:none}
   /* pot de miel : case invisible pour les humains, les robots la cochent */
   .hp{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
   /* étape 2 : ENVOYER collé au bas de l'écran, bord à bord */
