@@ -63,6 +63,8 @@
         padding:12px 0 max(14px, env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:6px;text-align:center}
   .foot, .foot .warn, .foot footer{color:#b9b9c6}
   .foot .warn{font-size:12px}
+  .legal{margin:0;font-size:11px}
+  .legal a{color:inherit}
   /* étape 1 : "Ne dis pas…" ; écran Reçu : "Ton vocal est stocké…" ; étape 2 : rien */
   body.s2 .foot{display:none}
   body:not(.sd) .foot footer, body.sd .foot .warn{display:none}
@@ -142,6 +144,7 @@
   <div class="foot rise" style="--i:4">
     <p class="warn">Ne dis pas ton nom de famille, ton adresse, ton école ni ton numéro. Pas d'insultes visant une vraie personne.</p>
     <footer>Ton vocal est stocké en privé et n'est écouté que par l'auteur de la chaîne. Il est supprimé après utilisation ou sur simple demande en message.</footer>
+    <p class="legal"><a href="conditions.html">Conditions</a> · <a href="confidentialite.html">Confidentialité</a></p>
   </div>
 </main>
 
