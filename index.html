@@ -75,6 +75,8 @@
 
   #recMsg{margin:0;background:var(--rec);color:#fff;font-weight:700;font-size:14px;text-align:center;padding:8px 14px}
   #recMsg:empty{display:none}
+  #recMsg ol{margin:6px 0 0;padding-left:20px;text-align:left;font-weight:500;font-size:13px;line-height:1.45}
+  #recMsg li b{font-weight:800}
 
   #send{font:400 24px/1 var(--display);letter-spacing:0;border:0;background:var(--ink);color:var(--paper);cursor:pointer;text-transform:uppercase;
         position:sticky;bottom:max(20px, env(safe-area-inset-bottom));z-index:2;margin:20px calc(20px - max(18px, env(safe-area-inset-left)));
@@ -167,14 +169,55 @@ const say = (m, err) => { $('msg').textContent = m; $('msg').className = err ? '
 const ready = () => $('send').disabled = !(blob && $('ok').checked && $('age').checked);
 ['ok', 'age'].forEach(id => $(id).onchange = ready);
 
+/* Micro refusé : on explique quoi faire selon le téléphone et le navigateur.
+   (Un site ne peut pas ouvrir les Réglages du téléphone : iPhone et Android l'interdisent.) */
+function device() {
+  const ua = navigator.userAgent;
+  const ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const android = /Android/.test(ua);
+  const app = /TikTok|musical_ly|Bytedance/i.test(ua) ? 'TikTok' : /Instagram/i.test(ua) ? 'Instagram'
+    : /FBAN|FBAV|FB_IAB/i.test(ua) ? 'Facebook' : /Snapchat/i.test(ua) ? 'Snapchat' : /LinkedInApp/i.test(ua) ? 'LinkedIn' : '';
+  const browser = ios ? (/CriOS/.test(ua) ? 'Chrome' : /FxiOS/.test(ua) ? 'Firefox' : /EdgiOS/.test(ua) ? 'Edge' : 'Safari')
+    : /SamsungBrowser/.test(ua) ? 'Samsung Internet' : /Firefox/.test(ua) ? 'Firefox' : /Edg/.test(ua) ? 'Edge' : 'Chrome';
+  return { ios, android, app, browser };
+}
+function micHelp(e) {
+  const d = device(), name = e && e.name;
+  let title, steps;
+  if (d.app) {
+    title = `L'appli ${d.app} bloque le micro.`;
+    steps = [`Touche <b>⋯</b> (ou <b>↗</b>) en haut à droite`, `Choisis <b>« Ouvrir dans ${d.ios ? 'Safari' : 'le navigateur'} »</b>`, `Appuie sur REC là-bas`];
+  } else if (name === 'NotFoundError' || name === 'OverconstrainedError') {
+    title = 'Aucun micro trouvé sur cet appareil.'; steps = ['Branche ou active un micro, puis appuie sur REC'];
+  } else if (name === 'NotReadableError' || name === 'AbortError') {
+    title = 'Le micro est déjà utilisé.'; steps = ['Raccroche ton appel ou ferme l’appli qui utilise le micro', 'Puis appuie sur REC'];
+  } else if (!e) {
+    title = "Ce navigateur ne sait pas enregistrer."; steps = [`Ouvre lachetonvocal.com dans ${d.ios ? 'Safari' : 'Chrome'}`];
+  } else if (d.ios && d.browser === 'Safari') {
+    title = 'Le micro est bloqué pour ce site.';
+    steps = ['Touche <b>aA</b> à gauche de l’adresse', '<b>Réglages du site web</b> → <b>Micro</b> → <b>Autoriser</b>', 'Si ça bloque encore : <b>Réglages</b> de l’iPhone → <b>Safari</b> → <b>Micro</b> → <b>Autoriser</b>', 'Puis appuie sur REC'];
+  } else if (d.ios) {
+    title = `${d.browser} n'a pas accès au micro.`;
+    steps = [`Ouvre <b>Réglages</b> de l’iPhone → <b>${d.browser}</b>`, 'Active <b>Micro</b>', 'Reviens ici, appuie sur REC et touche <b>Autoriser</b>'];
+  } else if (d.android) {
+    title = 'Le micro est bloqué pour ce site.';
+    steps = ['Touche l’icône à gauche de l’adresse → <b>Autorisations</b> → <b>Micro</b> → <b>Autoriser</b>',
+      `Si ça bloque encore : <b>Paramètres</b> du téléphone → <b>Applications</b> → <b>${d.browser}</b> → <b>Autorisations</b> → <b>Micro</b> → <b>Autoriser</b>`, 'Puis appuie sur REC'];
+  } else {
+    title = 'Le micro est bloqué pour ce site.';
+    steps = ['Clique sur l’icône à gauche de l’adresse → <b>Micro</b> → <b>Autoriser</b>', 'Recharge la page et appuie sur REC'];
+  }
+  $('recMsg').innerHTML = `<b>${title}</b><ol>${steps.map(s => `<li>${s}</li>`).join('')}</ol>`;
+}
+
 function pickMime() {
   const c = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/ogg;codecs=opus', 'audio/webm'];
   return c.find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || '';
 }
 async function start() {
-  if (!navigator.mediaDevices || !window.MediaRecorder) return recSay("Ton navigateur ne permet pas d'enregistrer. Ouvre la page dans Safari ou Chrome.");
+  if (!navigator.mediaDevices || !window.MediaRecorder) return micHelp(null);
   try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
-  catch (e) { return recSay("Le micro est bloqué. Autorise-le dans ton navigateur puis réessaie."); }
+  catch (e) { return micHelp(e); }
   mime = pickMime(); chunks = []; blob = null; ready();
   rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
   rec.ondataavailable = e => e.data.size && chunks.push(e.data);
