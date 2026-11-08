@@ -233,11 +233,16 @@ function stop() { if (rec && rec.state !== 'inactive') rec.stop(); }
 function done() {
   clearInterval(timer); cancelAnimationFrame(raf); clearWave();
   stream.getTracks().forEach(t => t.stop());
+  // iPhone : on libère complètement l'audio du micro, sinon la 1re écoute peut sortir muette (ou dans l'écouteur)
+  try { micSrc && micSrc.disconnect(); } catch (e) {}
+  micSrc = null;
+  if (actx) { actx.close().catch(() => {}); actx = null; }
   $('rec').classList.remove('on'); $('rec').textContent = 'REC'; $('rec').setAttribute('aria-label', 'Enregistrer');
   const dur = (performance.now() - t0) / 1000; recDur = dur;
   if (dur < MIN_S) { $('recHint').textContent = 'Trop court, réessaie.'; return; }
   blob = new Blob(chunks, { type: (rec.mimeType || mime || 'audio/webm').split(';')[0] });
-  $('player').src = URL.createObjectURL(blob); pl.currentTime = 0; plShow();
+  if (pl.src) URL.revokeObjectURL(pl.src);
+  pl.src = URL.createObjectURL(blob); pl.load(); primed = false; plShow();
   $('step1').hidden = true; $('step2').hidden = false; document.body.className = 's2'; window.scrollTo({ top: 0, behavior: 'smooth' });
   ready();
 }
@@ -245,7 +250,7 @@ function drawWave() {
   const cv = $('wave'), g = cv.getContext('2d');
   actx = actx || new (window.AudioContext || window.webkitAudioContext)();
   const an = actx.createAnalyser(); an.fftSize = 1024;
-  actx.createMediaStreamSource(stream).connect(an);
+  micSrc = actx.createMediaStreamSource(stream); micSrc.connect(an);
   const d = new Uint8Array(an.fftSize);
   const ink = getComputedStyle(document.documentElement).getPropertyValue('--ink');
   (function loop() {
@@ -266,7 +271,14 @@ const pl = $('player'), plDur = () => isFinite(pl.duration) && pl.duration > 0 ?
 const plShow = () => { const d = plDur(); $('fill').style.width = (d ? Math.min(100, pl.currentTime / d * 100) : 0) + '%';
   $('ptime').textContent = fmt(pl.currentTime) + ' / ' + fmt(d); };
 $('pp').innerHTML = PLAY;
-$('pp').onclick = () => pl.paused ? pl.play() : pl.pause();
+// 1re lecture : petit « saut » au début, comme quand on touche la barre (sinon iPhone joue parfois sans son)
+let primed = false, micSrc = null;
+$('pp').onclick = () => {
+  if (!pl.paused) return pl.pause();
+  if (!primed) { primed = true; try { pl.currentTime = 0.001; } catch (e) {} }
+  pl.muted = false; pl.volume = 1;
+  pl.play().catch(() => {});
+};
 pl.onplay = () => { $('pp').innerHTML = PAUSE; $('pp').setAttribute('aria-label', 'Pause'); };
 pl.onpause = () => { $('pp').innerHTML = PLAY; $('pp').setAttribute('aria-label', 'Écouter'); };
 pl.onended = () => { pl.currentTime = 0; plShow(); };
